@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Recommendations</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body {
+            padding: 20px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1 class="mb-4">Movie Recommendations</h1>
+        <form id="movieForm" class="mb-4">
+            <div class="form-group">
+                <label for="year">Year:</label>
+                <input type="number" id="year" name="year" class="form-control" required>
+            </div>
+            <div class="form-group">
+                <label for="genre">Genre:</label>
+                <select id="genre" name="genre" class="form-control" required>
+                    <option value="" selected disabled>Select a genre</option>
+                </select>
+            </div>
+            <button type="submit" class="btn btn-primary">Get Movies</button>
+        </form>
+        <h2>Recommended Movies</h2>
+        <table class="table table-striped white-space-nowrap">
+            <thead>
+                <tr>
+                    <th>Title</th>
+                    <th>Release Date</th>
+                    <th>Overview</th>
+                </tr>
+            </thead>
+            <tbody id="movieList"></tbody>
+        </table>
+    </div>
+
+    <script>
+        const API_KEY = 'd18499951e68f8622a3e5c3dd8ae0b5d';
+        const BASE_URL = 'https://api.themoviedb.org/3';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchGenres();
+        });
+
+        async function fetchGenres() {
+            try {
+                const response = await fetch(`${BASE_URL}/genre/movie/list?api_key=${API_KEY}&language=en-US`);
+                const data = await response.json();
+                const genreSelect = document.getElementById('genre');
+
+                data.genres.forEach(genre => {
+                    const option = document.createElement('option');
+                    option.value = genre.id;
+                    option.textContent = genre.name;
+                    genreSelect.appendChild(option);
+                });
+            } catch (error) {
+                console.error('Error fetching genres:', error);
+            }
+        }
+
+        document.getElementById('movieForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const year = document.getElementById('year').value;
+            const genreId = document.getElementById('genre').value;
+
+            try {
+                const response = await fetch(`${BASE_URL}/discover/movie?api_key=${API_KEY}&language=en-US&sort_by=popularity.desc&year=${year}&with_genres=${genreId}`);
+                const data = await response.json();
+                displayMovies(data.results);
+            } catch (error) {
+                console.error('Error fetching movies:', error);
+            }
+        });
+
+        function displayMovies(movies) {
+            const movieList = document.getElementById('movieList');
+            movieList.innerHTML = '';
+
+            movies.forEach(movie => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${movie.title}</td>
+                    <td>${movie.release_date}</td>
+                    <td>${movie.overview}</td>
+                `;
+                movieList.appendChild(row);
+            });
+        }
+    </script>
+</body>
+
+</html>
